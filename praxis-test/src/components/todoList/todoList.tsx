@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   Chip,
+  CircularProgress,
   Divider,
   List,
   ListItem,
@@ -13,11 +14,13 @@ import { useEffect, useState } from "react";
 import { TodoItem } from "./types";
 
 const TodoList = () => {
-  const { todoList } = useFetch();
+  const { todoList, setTodoList } = useFetch();
 
   const [filterText, setFilterText] = useState<string>("");
   const [filteredTodoList, setFilteredTodoList] =
     useState<TodoItem[]>(todoList);
+
+  const [itemsRemoving, setItemsRemoving] = useState<number[]>([]);
 
   useEffect(() => {
     const filteredList = todoList.filter((todoItem) => {
@@ -28,6 +31,31 @@ const TodoList = () => {
     });
     setFilteredTodoList(filteredList);
   }, [filterText, todoList]);
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === "todo_removed") {
+        console.log(`Todo with ID ${event.data.id} removed.`);
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, []);
+
+  const handleRemove = (id: number) => {
+    setItemsRemoving((prevState) => [...prevState, id]);
+    setTimeout(() => {
+      setTodoList((prevState) => prevState.filter((todo) => todo.id !== id));
+      setItemsRemoving((prevState) =>
+        prevState.filter((itemId) => itemId !== id),
+      );
+      window.postMessage({ type: "todo_removed", id }, "*");
+    }, 2000);
+  };
 
   return (
     <Box
@@ -74,9 +102,25 @@ const TodoList = () => {
                 }}
               >
                 <Typography>{todo.todo}</Typography>
-                <Button onClick={() => {}} color="error" variant="contained">
-                  Remove
-                </Button>
+                <Box
+                  sx={{
+                    minWidth: "120px",
+                    display: "flex",
+                    justifyContent: "center",
+                  }}
+                >
+                  {itemsRemoving.includes(todo.id) ? (
+                    <CircularProgress color={"error"} />
+                  ) : (
+                    <Button
+                      onClick={() => handleRemove(todo.id)}
+                      color="error"
+                      variant="contained"
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </Box>
               </ListItem>
               <Divider variant="fullWidth" component="li" />
             </Box>

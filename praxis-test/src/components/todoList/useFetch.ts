@@ -31,5 +31,5 @@ export function useFetch() {
     fetchData();
   }, []);
 
-  return { todoList };
+  return { todoList, setTodoList };
 }
