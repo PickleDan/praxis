@@ -1,17 +1,10 @@
 import { useFetch } from "./useFetch";
-import {
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  Divider,
-  List,
-  ListItem,
-  TextField,
-  Typography,
-} from "@mui/material";
-import { useEffect, useState } from "react";
+import { Box, Chip, List, TextField } from "@mui/material";
+import { useCallback, useEffect, useState } from "react";
 import { TodoItem } from "./types";
+import { TodoListItem } from "./todoListItem";
+
+const REMOVE_TIMEOUT = 2000;
 
 const TodoList = () => {
   const { todoList, setTodoList } = useFetch();
@@ -46,16 +39,19 @@ const TodoList = () => {
     };
   }, []);
 
-  const handleRemove = (id: number) => {
-    setItemsRemoving((prevState) => [...prevState, id]);
-    setTimeout(() => {
-      setTodoList((prevState) => prevState.filter((todo) => todo.id !== id));
-      setItemsRemoving((prevState) =>
-        prevState.filter((itemId) => itemId !== id),
-      );
-      window.postMessage({ type: "todo_removed", id }, "*");
-    }, 2000);
-  };
+  const handleRemove = useCallback(
+    (id: number) => {
+      setItemsRemoving((prevState) => [...prevState, id]);
+      setTimeout(() => {
+        setTodoList((prevState) => prevState.filter((todo) => todo.id !== id));
+        setItemsRemoving((prevState) =>
+          prevState.filter((itemId) => itemId !== id),
+        );
+        window.postMessage({ type: "todo_removed", id }, "*");
+      }, REMOVE_TIMEOUT);
+    },
+    [setTodoList, setItemsRemoving],
+  );
 
   return (
     <Box
@@ -94,36 +90,12 @@ const TodoList = () => {
       <List>
         {filteredTodoList.map((todo) => {
           return (
-            <Box key={todo.id}>
-              <ListItem
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Typography>{todo.todo}</Typography>
-                <Box
-                  sx={{
-                    minWidth: "120px",
-                    display: "flex",
-                    justifyContent: "center",
-                  }}
-                >
-                  {itemsRemoving.includes(todo.id) ? (
-                    <CircularProgress color={"error"} />
-                  ) : (
-                    <Button
-                      onClick={() => handleRemove(todo.id)}
-                      color="error"
-                      variant="contained"
-                    >
-                      Remove
-                    </Button>
-                  )}
-                </Box>
-              </ListItem>
-              <Divider variant="fullWidth" component="li" />
-            </Box>
+            <TodoListItem
+              text={todo.todo}
+              id={todo.id}
+              handleRemove={handleRemove}
+              isRemoving={itemsRemoving.includes(todo.id)}
+            />
           );
         })}
       </List>
