@@ -9,9 +9,25 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { useEffect, useState } from "react";
+import { TodoItem } from "./types";
 
 const TodoList = () => {
   const { todoList } = useFetch();
+
+  const [filterText, setFilterText] = useState<string>("");
+  const [filteredTodoList, setFilteredTodoList] =
+    useState<TodoItem[]>(todoList);
+
+  useEffect(() => {
+    const filteredList = todoList.filter((todoItem) => {
+      if (filterText.length < 3) {
+        return true;
+      }
+      return todoItem.todo.toLowerCase().includes(filterText.toLowerCase());
+    });
+    setFilteredTodoList(filteredList);
+  }, [filterText, todoList]);
 
   return (
     <Box
@@ -31,8 +47,11 @@ const TodoList = () => {
         <TextField
           fullWidth
           id="outlined-basic"
-          label="Outlined"
+          label="Filter todos"
           variant="outlined"
+          helperText={"Filter works after the second character entered"}
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
           sx={{
             marginRight: "12px",
           }}
@@ -45,7 +64,7 @@ const TodoList = () => {
       </Box>
 
       <List>
-        {todoList.map((todo) => {
+        {filteredTodoList.map((todo) => {
           return (
             <Box key={todo.id}>
               <ListItem
