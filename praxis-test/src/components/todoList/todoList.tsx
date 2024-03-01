@@ -91,6 +91,7 @@ const TodoList = () => {
         {filteredTodoList.map((todo) => {
           return (
             <TodoListItem
+              key={todo.id}
               text={todo.todo}
               id={todo.id}
               handleRemove={handleRemove}

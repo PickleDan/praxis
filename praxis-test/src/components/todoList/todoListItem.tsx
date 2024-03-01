@@ -19,7 +19,7 @@ const TodoListItemComponent = (props: TodoItemProps) => {
   const { id, text, handleRemove, isRemoving } = props;
 
   return (
-    <Box key={id}>
+    <Box>
       <ListItem
         sx={{
           display: "flex",
